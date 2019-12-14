@@ -1,13 +1,65 @@
-https://cran.r-project.org/web/packages/RNHANES/vignettes/introduction.html
-https://datascienceplus.com/weight-loss-in-the-u-s-an-analysis-of-nhanes-data-with-tidyverse/
-https://datascienceplus.com/ggplot2-features-for-visualizing-the-nhanes-data/
-https://www.ars.usda.gov/northeast-area/beltsville-md-bhnrc/beltsville-human-nutrition-research-center/food-surveys-research-group/docs/dmr-food-categories/
-https://healthmetrics.heart.org/mean-whole-grains-consumption-in-the-united-states-among-persons-2-years-national-health-and-nutrition-examination-surveys-2003-2016/
-https://ggplot2.tidyverse.org/reference/geom_smooth.html
+---
+title: "BST 260 Final Project -- What Do We Eat? Analysis of NHANES and WWEIA Data"
+author: "Evan Goldberg"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: html_document
+---
+
+## Introduction
+
+***Overview and Motivation*** 
+
+During the Summer of 2017, I participated in the SIBS program (Summer Institute of Biostatistics ) at Boston University. For our final project during the program, my team completed an analysis of the National Health and Nutrition Examination Survey (NHANES) where we looked at the relationship between food security (one's access to healthy and nutritious food) and diabetes, and between food security and mental health.  For my final project in BST 260, I wanted to work with the NHANES data set again. 
+
+All data can be found on the NHANES Website in the [Questionairres tab](https://wwwn.cdc.gov/nchs/nhanes/Default.aspx)
+
+Information concerning food codes can be found at the [The What We Eat in America (WWEIA) Food Categories](https://www.ars.usda.gov/northeast-area/beltsville-md-bhnrc/beltsville-human-nutrition-research-center/food-surveys-research-group/docs/dmr-food-categories/) site hosted by the United States Department of Agriculture.
+
+"The National Health and Nutrition Examination Survey (NHANES) is a program of studies designed to assess the health and nutritional status of adults and children in the United States. The survey is unique in that it combines interviews and physical examinations." - Description from the NHANES Website
+
+***Related Work***
+
+As mentioned above, I was inspired to choose this project topic based on prior research I had completed.
+
+***Initial Questions***
+
+I initially intended to continue with a focus in food security.  However, as I completed research and began mapping out my plan for this project, I decided to broaden my focus to food consumption and nutrition analysis, studying the relationships between different demographics and the type of foods they eat and nutrients they receive. I initially began working with the 2013-2014 NHANES data set.  However, I wanted to include trend analysis and thus incorporated all available data sets from 1999-2016 in order to further expand the questions I could answer in my analysis. I wanted to see if there were any interesting patterns in food consumption and nutrition that could help motivate healthier diets and lifestyles.
+
+## Methods
+
+***Data Analysis***
+
+R was used to complete data analysis and produce line and scatterplots. 
+
+A shiny app was also created to visualize 6 different types of plots for the data and to provide customization options in order to visualize different combinations of variables.
+
+Several different demographic groups were include in my analysis.  Below is a list of these groups and a description.
+
+Age: Years
+
+BMI: $\frac{kg}{m^{2}}$
+
+Diabetes: Yes/No
+
+Food Security: Full Food Security/Marginal Food Security/Low Food Security/Very Low Food Security
+
+Gender: Male/Female
+
+Poverty Ratio: Ratio of family income to poverty. Larger values indicate less money. On a 0-5 scale.
+
+Race: Mexican American/Hispanic/Non-Hispanic Black/Non-Hispanic White/Other
+
+Smoking Status: Yes/No/Sometimes
+
+Weight Loss: Trying to lose weight? Yes/No
 
 
+***R Code***
+
+Below is my commented R Code.  Due to the nature of how NHANES data sets are structured and my choice to use all survey cycles from 1999 to 2016, I had to work with 90+ data sets, which I used to merge into 3 very large data sets. This requires a lot of data wrangling and scraping.
 
 ```{r}
+#load necessary libraries
 library(ggplot2)
 library(tidyverse)
 library(RNHANES)
@@ -26,7 +78,16 @@ library(dplyr)
 library(ggrepel)
 ```
 
+Below I generate a demographic master list that includes demographic information as well as inforamtion for some other variables of interest such as diabetes status and smoking status.
+
 ```{r}
+#Load Demographic data set
+#Select variables of interest and rename (transmute) them to match future datasets in order to join them together
+#Load and join body measurement, weight, food security, diabetes, and smoking data sets
+#Again select variables of interest from each dataset
+#Add a wave variable denoting what years the dataset is from
+#We do this for all 9 survey cycles from 1999-2016.
+
 d99<-read_xpt("DEMO.XPT") %>%
   select(SEQN, RIAGENDR, RIDAGEYR, RIDRETH1,RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA) %>%
   transmute(SEQN=SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA) %>%
@@ -174,6 +235,8 @@ d13<-read_xpt("DEMO_H.XPT") %>%
   transmute(SEQN, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070 = SMD650)
 d13$wave <- rep("2013-2014",nrow(d13))
 
+#The 2015-2016 survye cycle does not have a food security so we have to load NAs into these two columns
+
 d15<-read_xpt("DEMO_I.XPT") %>%
   select(SEQN, RIAGENDR, RIDAGEYR, RIDRETH1,RIDEXPRG, INDFMIN2, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA) %>%
   transmute(SEQN=SEQN, RIAGENDR, RIDAGEYR, RIDRETH1, RIDEXPRG, INDFMINC=INDFMIN2, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA) %>%
@@ -190,28 +253,38 @@ d15$HHFDSEC <- rep(NA,nrow(d15))
 d15$ADFDSEC <- rep(NA,nrow(d15))
 d15$wave <- rep("2015-2016",nrow(d15))
 
+#We join the 9 demographic data frames and then recode them to be more informative
+
 dat <- rbind(d99, d01, d03, d05, d07, d09, d11, d13, d15) %>%
   mutate(
+    #Give food security readable labels based on definitions from the NHANES website
     food_security = recode_factor(HHFDSEC,
                                   `1` = 'Full food security',
                                   `2` = 'Marginal food security',
                                   `3` = 'Low food security',
                                   `4` = 'Very low food security'),
+    #Give gender readable labels
     gender = recode_factor(RIAGENDR,
                            `1` = "Male",
                            `2` = "Female"),
+    #Give race readable labels
     race = recode_factor(RIDRETH1,
                          `1` = "Mexican American",
                          `2` = "Hispanic",
                          `3` = "Non-Hispanic, White",
                          `4` = "Non-Hispanic, Black",
                          `5` = "Others"),
+    #Give diabetes readable labels
     diabetes = if_else(DIQ010 == 1, "Yes", "No"),
-    pregnancy = if_else(RIDEXPRG == 1, "Yes", "No"),
+    #Give trying to lose weight readable labels
     tryweloss = if_else(WHQ070 == 1, "Yes", "No"),
+    #Give smoking status readable labels
     cursmoke = if_else(SMQ040 == 1, "Every Day", if_else(SMQ040 == 2, "Some days", "Not at all")),
+    #Create a bmi category variable
     bmi_cat = if_else(BMXBMI >= 30, '4', if_else(BMXBMI >= 25 & BMXBMI < 30, '3', if_else(BMXBMI >= 18.5 & BMXBMI < 25, '2', '1'))),
+    #Create an age category to differentiate between adults and youth
     age_cat = if_else(RIDAGEYR >= 18, 'Adult', 'Youth'),
+    #Create a poverty ratio category
     poverty_cat = if_else(INDFMPIR >= 5, 
                           '5', if_else(INDFMPIR < 5 & INDFMPIR >= 4, 
                                        '4', if_else(INDFMPIR < 4 & INDFMPIR >= 3, 
@@ -219,6 +292,16 @@ dat <- rbind(d99, d01, d03, d05, d07, d09, d11, d13, d15) %>%
                                                                  '2', ifelse(INDFMPIR < 2 & INDFMPIR >= 1, 
                                                                              '1', '0')))))
   ) 
+
+```
+
+Next I create food related data sets for each survey cycle.  These data sets contain information about what foods people eat on a given day and how much. 2003 and onward, data was collected on two separate days. As such, the 1999-2000 and 2001-2002 have less data to use for food information.  
+
+```{r}
+#Load Food data set
+#Select variables of interest and rename (transmute) them to match future datasets in order to join them together
+#Add a wave variable denoting what years the dataset is from
+#We do this for all 9 survey cycles from 1999-2016.
 
 food_data_9900 <- read_xpt("DRXIFF.XPT") %>%
   select(SEQN, DRDIFDCD, DRXIGRMS) %>% 
@@ -380,6 +463,8 @@ food_data_1516_day2 <- read_xpt("DR2IFF_I.XPT") %>%
   select(SEQN, food_code, grams, category_description, label, category_number)
 food_data_1516_day2$wave <- rep("2015-2016",nrow(food_data_1516_day2))
 
+#Join all 9 data sets together
+
 total_food_data <- rbind(food_data_9900, 
                          food_data_0102, 
                          food_data_0304_day1, 
@@ -397,10 +482,27 @@ total_food_data <- rbind(food_data_9900,
                          food_data_1516_day1, 
                          food_data_1516_day2)
 
+#Create a master food data set that incorporates demographic data for each individual
+
 full_food_data <- total_food_data %>%
   left_join(dat, by = "SEQN") %>%
-  select(SEQN, wave.x,  food_code, grams, category_description, label, category_number, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070, food_security, gender, race, diabetes, pregnancy, tryweloss, cursmoke, bmi_cat, age_cat, poverty_cat) %>%
-  transmute(SEQN, wave = wave.x,  food_code, grams, category_description, label, category_number, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070, food_security, gender, race, diabetes, pregnancy, tryweloss, cursmoke, bmi_cat, age_cat, poverty_cat)
+  select(SEQN, wave.x,  food_code, grams, category_description, label, category_number, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070, food_security, gender, race, diabetes, tryweloss, cursmoke, bmi_cat, age_cat, poverty_cat) %>%
+  transmute(SEQN, wave = wave.x,  food_code, grams, category_description, label, category_number, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070, food_security, gender, race, diabetes, tryweloss, cursmoke, bmi_cat, age_cat, poverty_cat)
+```
+
+The food codes for our data set are fairly specific and not always informative/useful.  I use another list from [United States Department of Agriculture](https://www.ars.usda.gov/ARSUserFiles/80400530/pdf/1516/Food_categories_2015-2016.pdf) that provides us with more general but informative food labels.  These labels were only available in pdf format and I could not find them elsewhere online. As such, I had to hard code the labels into my dataset.
+
+```{r}
+full_food_data$general_categories <- as.factor(if_else(full_food_data$category_number %in% c(1002, 1004, 1006, 1008), 'Milk', if_else(full_food_data$category_number %in% c(1202, 1204, 1206, 1208), 'Flavored Milk', if_else(full_food_data$category_number %in% c(1402, 1404), 'Dairy Drinks and Substitutes', if_else(full_food_data$category_number %in% c(1602, 1604), 'Cheese', if_else(full_food_data$category_number %in% c(1820, 1822), 'Yogurt', if_else(full_food_data$category_number %in% c(2002, 2004, 2006, 2008, 2010), 'Meats', if_else(full_food_data$category_number %in% c(2202, 2204, 2206), 'Poultry', if_else(full_food_data$category_number %in% c(2402, 2404), 'Shellfish', if_else(full_food_data$category_number %in% c(2502), 'Eggs', if_else(full_food_data$category_number %in% c(2602, 2604, 2606, 2608), 'Cured Meats/Poultry', if_else(full_food_data$category_number %in% c(2802, 2804, 2806), 'Plant-based Protein Foods', if_else(full_food_data$category_number %in% c(3002, 3004, 3006), 'Mixed Dishes - Meat, Poultry, Seafood', if_else(full_food_data$category_number %in% c(3202, 3204, 3206, 3208), 'Mixed Dishes - Grain-based', if_else(full_food_data$category_number %in% c(3402, 3404, 3406), 'Mixed Dishes - Asian', if_else(full_food_data$category_number %in% c(3502, 3504, 3506), 'Mixed Dishes - Mexican', if_else(full_food_data$category_number %in% c(3602), 'Mixed Dishes - Pizza', if_else(full_food_data$category_number %in% c(3702, 3703, 3704, 3706, 3708, 3720, 3722), 'Mixed Dishes - Sandwiches', if_else(full_food_data$category_number %in% c(3802), 'Mixed Dishes - Soups', if_else(full_food_data$category_number %in% c(4002, 4004), 'Cooked Grains', if_else(full_food_data$category_number %in% c(4202, 4204, 4206, 4208), 'Breads, Rolls, Tortillas', if_else(full_food_data$category_number %in% c(4402, 4404), 'Quick Breads and Bread Products', if_else(full_food_data$category_number %in% c(4602, 4604), 'Ready-to-Eat Cereals', if_else(full_food_data$category_number %in% c(4802, 4804), 'Cooked Cereals', if_else(full_food_data$category_number %in% c(5002, 5004, 5006, 5008), 'Savory Snacks', if_else(full_food_data$category_number %in% c(5202, 5204), 'Crackers', if_else(full_food_data$category_number %in% c(5402, 5404), 'Snack/Meal Bars', if_else(full_food_data$category_number %in% c(5502, 5504, 5506), 'Sweet Bakery Product', if_else(full_food_data$category_number %in% c(5702, 5704), 'Candy', if_else(full_food_data$category_number %in% c(5802, 5804, 5806), 'Other Desserts', if_else(full_food_data$category_number %in% c(6002, 6004, 6006, 6008, 6010, 6012, 6014, 6016, 6018), 'Fruits', if_else(full_food_data$category_number %in% c(6402, 6404, 6406, 6408, 6410, 6412, 6414, 6416, 6418, 6420, 6422), 'Vegetables, excluding Potatoes', if_else(full_food_data$category_number %in% c(6802, 6804, 6806), 'White Potatoes', if_else(full_food_data$category_number %in% c(7002, 7004, 7006, 7008), '100% Juice', if_else(full_food_data$category_number %in% c(7102, 7104, 7106), 'Diet Beverages', if_else(full_food_data$category_number %in% c(7202, 7204, 7206, 7208, 7220), 'Sweetened Beverage', if_else(full_food_data$category_number %in% c(7302, 7304), 'Coffee and Tea', if_else(full_food_data$category_number %in% c(7502, 7504, 7506), 'Alcoholic Beverages', if_else(full_food_data$category_number %in% c(7702, 7704), 'Plain Water', if_else(full_food_data$category_number %in% c(7802, 7804), 'Flavored or Enhanced Water', if_else(full_food_data$category_number %in% c(8002, 8004, 8006, 8008, 8010, 8012), 'Fats and Oils', if_else(full_food_data$category_number %in% c(8402, 8404, 8406, 8408, 8410, 8412), 'Condiments and Sauces', if_else(full_food_data$category_number %in% c(8802, 8804, 8806), 'Sugars', if_else(full_food_data$category_number %in% c(9002, 9004, 9006, 9008, 9010, 9012), 'Baby Foods', if_else(full_food_data$category_number %in% c(9202, 9204), 'Baby Beverages', if_else(full_food_data$category_number %in% c(9402, 9404, 9406), 'Infant Formulas', if_else(full_food_data$category_number %in% c(9602), 'Human Milk', 'Other')))))))))))))))))))))))))))))))))))))))))))))))
+```
+
+Next I created nutrition related data sets for each survey cycle.  These data sets contain information about what nutrition people intake on a given day.  Like with our food data set, 2003 and onward, data was collected on two separate days. As such, the 1999-2000 and 2001-2002 have less data to use for nutrition information. 
+
+```{r}
+#Load Nutrition data set
+#Select variables of interest and rename (transmute) them to match future datasets in order to join them together
+#Add a wave variable denoting what years the dataset is from
+#We do this for all 9 survey cycles from 1999-2016.
 
 nutrition_data_0102 <- read_xpt("DRXTOT_B.XPT")%>%
   select(SEQN, DRXTKCAL, DRXTPROT, DRXTCARB, DRXTSUGR, DRXTFIBE, DRXTTFAT, DRXTSFAT, DRXTMFAT, DRXTPFAT, DRXTCHOL, DRXTATOC, DRXTRET, DRXTVARA, DRXTACAR, DRXTBCAR, DRXTCRYP, DRXTLYCO, DRXTLZ, DRXTVB1, DRXTVB2, DRXTNIAC, DRXTVB6, DRXTFOLA, DRXTFA, DRXTFF, DRXTFDFE, DRXTVB12, DRXTVC, DRXTVK, DRXTCALC, DRXTPHOS, DRXTMAGN, DRXTIRON, DRXTZINC, DRXTCOPP, DRDTSODI, DRXTPOTA, DRXTSELE, DRXTCAFF, DRXTTHEO, DRXTS040, DRXTS060, DRXTS080, DRXTS100, DRXTS120, DRXTS140, DRXTS160, DRXTS180, DRXTM161, DRXTM181, DRXTM201, DRXTM221, DRXTP182, DRXTP183, DRXTP184, DRXTP204, DRXTP205, DRXTP225, DRXTP226, DRD320GW, DRD330GW) %>% 
@@ -477,6 +579,7 @@ nutrition_data_1516_day2 <- read_xpt("DR2TOT_I.XPT")%>%
   transmute(SEQN, Calories = DR2TKCAL, Protein = DR2TPROT, Carbohydrates = DR2TCARB, Sugar = DR2TSUGR, Fiber = DR2TFIBE, TotalFat = DR2TTFAT, SFAT = DR2TSFAT, MFAT = DR2TMFAT, PFAT = DR2TPFAT, Cholesterol = DR2TCHOL, VitE = DR2TATOC, Retinol = DR2TRET, VitA = DR2TVARA, AlphaCaro = DR2TACAR, BetaCaro = DR2TBCAR,  BetaCryp = DR2TCRYP, Lycopene = DR2TLYCO, Lutein = DR2TLZ, Thiamin = DR2TVB1, Riboflavin = DR2TVB2, Niacin = DR2TNIAC, VitB6 = DR2TVB6, TotFolate = DR2TFOLA, FolicAcid = DR2TFA, FoodFolate = DR2TFF, Folate = DR2TFDFE, VitB12 = DR2TVB12, VitC = DR2TVC, VitK = DR2TVK, Calcium = DR2TCALC, Phosphorus = DR2TPHOS, Magnesium = DR2TMAGN, Iron = DR2TIRON, Zinc = DR2TZINC, Copper = DR2TCOPP, Sodium = DR2TSODI, Potassium = DR2TPOTA, Selenium = DR2TSELE, Caffeine = DR2TCAFF, Theobromine = DR2TTHEO, Butanoic = DR2TS040, Hexanoic = DR2TS060, Octanoic = DR2TS080, Decanoic = DR2TS100, Dodecanoic = DR2TS120, Tetradecanoic = DR2TS140,  Hexadecanoic = DR2TS160, Octadecanoic = DR2TS180, Hexadecenoic = DR2TM161, Octadecenoic = DR2TM181, Eicosenoic = DR2TM201, Docosenoic = DR2TM221, Octadecadienoic = DR2TP182, Octadecatrienoic = DR2TP183, Octadecatetraenoic = DR2TP184, Eicosatetraenoic = DR2TP204, Eicosapentaenoic = DR2TP205, Docosapentaenoic = DR2TP225, Docosahexaenoic = DR2TP226, PlainWater = DR2_320Z, TapWater = DR2_330Z)
 nutrition_data_1516_day2$wave <- rep("2015-2016",nrow(nutrition_data_1516_day2))
 
+#Join all the nutrition data sets
 total_nutrition_data <- rbind(nutrition_data_0102, 
                               nutrition_data_0304_day1, 
                               nutrition_data_0304_day2, 
@@ -493,45 +596,53 @@ total_nutrition_data <- rbind(nutrition_data_0102,
                               nutrition_data_1516_day1, 
                               nutrition_data_1516_day2)
 
+#Create a master nutrition data set that incorporates demographic data for each individual
+
 full_nutrition_data <- total_nutrition_data %>%
   left_join(dat, by = "SEQN") %>%
-  select(SEQN, wave.x, Calories, Protein, Carbohydrates, Sugar, Fiber, TotalFat, SFAT, MFAT, PFAT, Cholesterol, VitE, Retinol, VitA, AlphaCaro, BetaCaro,  BetaCryp, Lycopene, Lutein, Thiamin, Riboflavin, Niacin, VitB6, TotFolate, FolicAcid, FoodFolate, Folate, VitB12, VitC, VitK, Calcium, Phosphorus, Magnesium, Iron, Zinc, Copper, Sodium, Potassium, Selenium, Caffeine, Theobromine, Butanoic, Hexanoic, Octanoic, Decanoic, Dodecanoic, Tetradecanoic,  Hexadecanoic, Octadecanoic, Hexadecenoic, Octadecenoic, Eicosenoic, Docosenoic, Octadecadienoic, Octadecatrienoic, Octadecatetraenoic, Eicosatetraenoic, Eicosapentaenoic, Docosapentaenoic, Docosahexaenoic, PlainWater, TapWater, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070, food_security, gender, race, diabetes, pregnancy, tryweloss, cursmoke, bmi_cat, age_cat, poverty_cat) %>%
-  transmute(SEQN, wave = wave.x, Calories, Protein, Carbohydrates, Sugar, Fiber, TotalFat, SFAT, MFAT, PFAT, Cholesterol, VitE, Retinol, VitA, AlphaCaro, BetaCaro,  BetaCryp, Lycopene, Lutein, Thiamin, Riboflavin, Niacin, VitB6, TotFolate, FolicAcid, FoodFolate, Folate, VitB12, VitC, VitK, Calcium, Phosphorus, Magnesium, Iron, Zinc, Copper, Sodium, Potassium, Selenium, Caffeine, Theobromine, Butanoic, Hexanoic, Octanoic, Decanoic, Dodecanoic, Tetradecanoic,  Hexadecanoic, Octadecanoic, Hexadecenoic, Octadecenoic, Eicosenoic, Docosenoic, Octadecadienoic, Octadecatrienoic, Octadecatetraenoic, Eicosatetraenoic, Eicosapentaenoic, Docosapentaenoic, Docosahexaenoic, PlainWater, TapWater, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070, food_security, gender, race, diabetes, pregnancy, tryweloss, cursmoke, bmi_cat, age_cat, poverty_cat)
+  select(SEQN, wave.x, Calories, Protein, Carbohydrates, Sugar, Fiber, TotalFat, SFAT, MFAT, PFAT, Cholesterol, VitE, Retinol, VitA, AlphaCaro, BetaCaro,  BetaCryp, Lycopene, Lutein, Thiamin, Riboflavin, Niacin, VitB6, TotFolate, FolicAcid, FoodFolate, Folate, VitB12, VitC, VitK, Calcium, Phosphorus, Magnesium, Iron, Zinc, Copper, Sodium, Potassium, Selenium, Caffeine, Theobromine, Butanoic, Hexanoic, Octanoic, Decanoic, Dodecanoic, Tetradecanoic,  Hexadecanoic, Octadecanoic, Hexadecenoic, Octadecenoic, Eicosenoic, Docosenoic, Octadecadienoic, Octadecatrienoic, Octadecatetraenoic, Eicosatetraenoic, Eicosapentaenoic, Docosapentaenoic, Docosahexaenoic, PlainWater, TapWater, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070, food_security, gender, race, diabetes, tryweloss, cursmoke, bmi_cat, age_cat, poverty_cat) %>%
+  transmute(SEQN, wave = wave.x, Calories, Protein, Carbohydrates, Sugar, Fiber, TotalFat, SFAT, MFAT, PFAT, Cholesterol, VitE, Retinol, VitA, AlphaCaro, BetaCaro,  BetaCryp, Lycopene, Lutein, Thiamin, Riboflavin, Niacin, VitB6, TotFolate, FolicAcid, FoodFolate, Folate, VitB12, VitC, VitK, Calcium, Phosphorus, Magnesium, Iron, Zinc, Copper, Sodium, Potassium, Selenium, Caffeine, Theobromine, Butanoic, Hexanoic, Octanoic, Decanoic, Dodecanoic, Tetradecanoic,  Hexadecanoic, Octadecanoic, Hexadecenoic, Octadecenoic, Eicosenoic, Docosenoic, Octadecadienoic, Octadecatrienoic, Octadecatetraenoic, Eicosatetraenoic, Eicosapentaenoic, Docosapentaenoic, Docosahexaenoic, PlainWater, TapWater, RIAGENDR, RIDAGEYR, RIDRETH1,  RIDEXPRG, INDFMINC, INDFMPIR, WTINT2YR, WTMEC2YR, SDMVPSU, SDMVSTRA, BMXBMI, WHQ070, HHFDSEC, ADFDSEC, DIQ010, SMQ040, SMD070, food_security, gender, race, diabetes, tryweloss, cursmoke, bmi_cat, age_cat, poverty_cat)
 
-full_food_data$general_categories <- as.factor(if_else(full_food_data$category_number %in% c(1002, 1004, 1006, 1008), 'Milk', if_else(full_food_data$category_number %in% c(1202, 1204, 1206, 1208), 'Flavored Milk', if_else(full_food_data$category_number %in% c(1402, 1404), 'Dairy Drinks and Substitutes', if_else(full_food_data$category_number %in% c(1602, 1604), 'Cheese', if_else(full_food_data$category_number %in% c(1820, 1822), 'Yogurt', if_else(full_food_data$category_number %in% c(2002, 2004, 2006, 2008, 2010), 'Meats', if_else(full_food_data$category_number %in% c(2202, 2204, 2206), 'Poultry', if_else(full_food_data$category_number %in% c(2402, 2404), 'Shellfish', if_else(full_food_data$category_number %in% c(2502), 'Eggs', if_else(full_food_data$category_number %in% c(2602, 2604, 2606, 2608), 'Cured Meats/Poultry', if_else(full_food_data$category_number %in% c(2802, 2804, 2806), 'Plant-based Protein Foods', if_else(full_food_data$category_number %in% c(3002, 3004, 3006), 'Mixed Dishes - Meat, Poultry, Seafood', if_else(full_food_data$category_number %in% c(3202, 3204, 3206, 3208), 'Mixed Dishes - Grain-based', if_else(full_food_data$category_number %in% c(3402, 3404, 3406), 'Mixed Dishes - Asian', if_else(full_food_data$category_number %in% c(3502, 3504, 3506), 'Mixed Dishes - Mexican', if_else(full_food_data$category_number %in% c(3602), 'Mixed Dishes - Pizza', if_else(full_food_data$category_number %in% c(3702, 3703, 3704, 3706, 3708, 3720, 3722), 'Mixed Dishes - Sandwiches', if_else(full_food_data$category_number %in% c(3802), 'Mixed Dishes - Soups', if_else(full_food_data$category_number %in% c(4002, 4004), 'Cooked Grains', if_else(full_food_data$category_number %in% c(4202, 4204, 4206, 4208), 'Breads, Rolls, Tortillas', if_else(full_food_data$category_number %in% c(4402, 4404), 'Quick Breads and Bread Products', if_else(full_food_data$category_number %in% c(4602, 4604), 'Ready-to-Eat Cereals', if_else(full_food_data$category_number %in% c(4802, 4804), 'Cooked Cereals', if_else(full_food_data$category_number %in% c(5002, 5004, 5006, 5008), 'Savory Snacks', if_else(full_food_data$category_number %in% c(5202, 5204), 'Crackers', if_else(full_food_data$category_number %in% c(5402, 5404), 'Snack/Meal Bars', if_else(full_food_data$category_number %in% c(5502, 5504, 5506), 'Sweet Bakery Product', if_else(full_food_data$category_number %in% c(5702, 5704), 'Candy', if_else(full_food_data$category_number %in% c(5802, 5804, 5806), 'Other Desserts', if_else(full_food_data$category_number %in% c(6002, 6004, 6006, 6008, 6010, 6012, 6014, 6016, 6018), 'Fruits', if_else(full_food_data$category_number %in% c(6402, 6404, 6406, 6408, 6410, 6412, 6414, 6416, 6418, 6420, 6422), 'Vegetables, excluding Potatoes', if_else(full_food_data$category_number %in% c(6802, 6804, 6806), 'White Potatoes', if_else(full_food_data$category_number %in% c(7002, 7004, 7006, 7008), '100% Juice', if_else(full_food_data$category_number %in% c(7102, 7104, 7106), 'Diet Beverages', if_else(full_food_data$category_number %in% c(7202, 7204, 7206, 7208, 7220), 'Sweetened Beverage', if_else(full_food_data$category_number %in% c(7302, 7304), 'Coffee and Tea', if_else(full_food_data$category_number %in% c(7502, 7504, 7506), 'Alcoholic Beverages', if_else(full_food_data$category_number %in% c(7702, 7704), 'Plain Water', if_else(full_food_data$category_number %in% c(7802, 7804), 'Flavored or Enhanced Water', if_else(full_food_data$category_number %in% c(8002, 8004, 8006, 8008, 8010, 8012), 'Fats and Oils', if_else(full_food_data$category_number %in% c(8402, 8404, 8406, 8408, 8410, 8412), 'Condiments and Sauces', if_else(full_food_data$category_number %in% c(8802, 8804, 8806), 'Sugars', if_else(full_food_data$category_number %in% c(9002, 9004, 9006, 9008, 9010, 9012), 'Baby Foods', if_else(full_food_data$category_number %in% c(9202, 9204), 'Baby Beverages', if_else(full_food_data$category_number %in% c(9402, 9404, 9406), 'Infant Formulas', if_else(full_food_data$category_number %in% c(9602), 'Human Milk', 'Other')))))))))))))))))))))))))))))))))))))))))))))))
+#Created a list of official nutrition column titles.  This will be used in our shiny app
 
 nutrition_variables <- c('Energy (kcal)', 'Protein (gm)', 'Carbohydrate (gm)', 'Total sugars (gm)', 'Dietary fiber (gm)', 'Total fat (gm)', 'Total saturated fatty acids (gm)', 'Total monounsaturated fatty acids (gm)', 'Total polyunsaturated fatty acids (gm)', 'Cholesterol (mg)', 'Vitamin E as alpha-tocopherol (mg)', 'Retinol (mcg)', 'Vitamin A, RAE (mcg)', 'Alpha-carotene (mcg)', 'Beta-carotene (mcg)', 'Beta-cryptoxanthin (mcg)', 'Lycopene (mcg)', 'Lutein + zeaxanthin (mcg)', 'Thiamin (Vitamin B1) (mg)', 'Riboflavin (Vitamin B2) (mg)', 'Niacin (mg)', 'Vitamin B6 (mg)', 'Total folate (mcg)', 'Folic acid (mcg)', 'Food folate (mcg)', 'Folate, DFE (mcg)','Vitamin B12 (mcg)', 'Vitamin C (mg)', 'Vitamin K (mcg)', 'Calcium (mg)', 'Phosphorus (mg)', 'Magnesium (mg)', 'Iron (mg)', 'Zinc (mg)', 'Copper (mg)', 'Sodium (mg)', 'Potassium (mg)', 'Selenium (mcg)', 'Caffeine (mg)', 'Theobromine (mg)', 'SFA 4:0 (Butanoic) (gm)', 'SFA 6:0 (Hexanoic) (gm)', 'SFA 8:0 (Octanoic) (gm)', 'SFA 10:0 (Decanoic) (gm)', 'SFA 12:0 (Dodecanoic) (gm)', 'SFA 14:0 (Tetradecanoic) (gm)', 'SFA 16:0 (Hexadecanoic) (gm)', 'SFA 18:0 (Octadecanoic) (gm)', 'MFA 16:1 (Hexadecenoic) (gm)', 'MFA 18:1 (Octadecenoic) (gm)', 'MFA 20:1 (Eicosenoic) (gm)', 'MFA 22:1 (Docosenoic) (gm)', 'PFA 18:2 (Octadecadienoic) (gm)', 'PFA 18:3 (Octadecatrienoic) (gm)', 'PFA 18:4 (Octadecatetraenoic) (gm)', 'PFA 20:4 (Eicosatetraenoic) (gm)', 'PFA 20:5 (Eicosapentaenoic) (gm)', 'PFA 22:5 (Docosapentaenoic) (gm)', 'PFA 22:6 (Docosahexaenoic) (gm)', 'Plain water (gm)', 'Tap water (gm)')
 ```
 
-```{r}
-trend <- data.frame(matrix(ncol = 3, nrow=1))
-cnames <- c("year", "category", "freq")
-colnames(trend) <- cnames
-years <- c(unique(dat$wave))
-years <- years[-9]
-category <- c(unique(as.character(dat$food_security)))
-category <- category[complete.cases(category)]
+***Exploratory Analysis***
 
+The first plot I made was a simple demographics trends plot. This plot plots the percentage of each group within a chosen demographic in a given year.  As such, the values for each point in a given year should add up to 100%. These plot use data weights from the survey so they are representative of the United States population.  Below is an example of one these plots looking at the trends food security status.  In the shiny app, the user has the ability to select which demographic to view.
+
+```{r}
+trend <- data.frame(matrix(ncol = 3, nrow=1)) #create an empty data frame to write into
+cnames <- c("year", "category", "freq")
+colnames(trend) <- cnames #add column names
+years <- c(unique(dat$wave)) #create a list of survey cycle years
+years <- years[-9] #don't include 2015-2016 since it does not have food security information
+category <- c(unique(as.character(dat$food_security))) #create a list containing the different food security categories
+category <- category[complete.cases(category)] #Make sure there are no NAs
+
+#create rows for each combination of year and food security category
 for (year in years){
   for (i in (1:length(category))){
     yr = year
     cat = category[i]
     pcts = with(dat %>% filter(wave == year),
-     wpct(food_security, weight =  WTINT2YR))*100
-    pct = pcts[[i]]
+     wpct(food_security, weight =  WTINT2YR))*100 #craeate a weighted list of percents for each category in a given year
+    pct = pcts[[i]] #select the proper category
     newrow = c(yr, cat, pct)
     trend <- rbind(trend, newrow)
   }
 }
 trend <- trend %>% drop_na
-trend$freq<-as.numeric(trend$freq)
+trend$freq<-as.numeric(trend$freq) #make frequency numeric so it plots properly
 
+#create the plot
 trend %>% 
   ggplot(aes(year, freq, fill = category, group = category)) +
   geom_line(color = "black", size = 0.3) +
   geom_point(colour="black", pch=21, size = 3) +
   theme_light()+
-  scale_colour_colorblind()+
+  scale_colour_colorblind()+ #best color palette for me :)
   labs(
     title = "Demographic Trends in the United States",
     caption = "NHANES 1999-2016 survey",
@@ -541,21 +652,23 @@ trend %>%
     )
 ```
 
+After looking at trends of demographics, I wanted to next look at trends of food consumption within the different demographics. The following two plots plot trends of food consumption.  The first plot divides the graph amongst different demographic groups while the second one does not.  In the shiny app these plots are joined as one and the user has the option whether to incorporate a demographic variable.  The plots do not use survey weights so they may not necessarilly be representative of the United States.  The plots include error bars equated using a 95% confidence interval.  Initally I only included the mean consumption value, however I thought it would be useful to include some form of variation. This can especially revealing since our data has large variance when it comes to certain foods. Below are examples of two of these plots looking at trends of fruit consumption.  The first plot is divide amongst food security status. 
+
 ```{r}
 full_food_data %>%
-  filter(RIDAGEYR >= 2) %>%
+  filter(RIDAGEYR >= 2) %>% #I only want to look at people ages 2 and up since that is around the age children are eating actual food
   select(wave, grams, general_categories, food_security) %>%
   drop_na%>%
   group_by(wave, general_categories, food_security) %>%
-  summarise(grams.mean = mean(grams), grams.sd = sd(grams), n=n())%>%
-  filter(general_categories %in% c("Fruits")) %>%
+  summarise(grams.mean = mean(grams), grams.sd = sd(grams), n=n())%>% #provides us with information to calculate confidence intervals
+  filter(general_categories %in% c("Fruits")) %>% #select our category of interest
   ggplot()+
-  geom_point(aes(x=wave, y = grams.mean, color = food_security)) +
-  geom_errorbar(aes(x=wave, ymin=grams.mean-grams.sd*1.96/sqrt(n), ymax=grams.mean+grams.sd*1.96/sqrt(n), colour = food_security), width = .2)+
-  geom_line(aes(x=wave, y = grams.mean, group = food_security, colour=food_security), pch=21, size = 0.3)+
+  geom_point(aes(x=wave, y = grams.mean, color = food_security)) + #plot points
+  geom_errorbar(aes(x=wave, ymin=grams.mean-grams.sd*1.96/sqrt(n), ymax=grams.mean+grams.sd*1.96/sqrt(n), colour = food_security), width = .2)+ #create confidence intervals around the points
+  geom_line(aes(x=wave, y = grams.mean, group = food_security, colour=food_security), pch=21, size = 0.3)+ #draw lines between points
   theme_light()+
   scale_colour_colorblind()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ #need to make axis adjustments for proper visualization
   theme(legend.text = element_text(size = 10))+
   labs(
     title = "Food Trends in the United States",
@@ -564,10 +677,11 @@ full_food_data %>%
     y = "Average Grams per Day",
     color = "Food Security"
     )+
-  facet_grid(~food_security)
+  facet_grid(~food_security) #divide the graph into different segments
 ```
 
 ```{r}
+#this code is the same as above but removes the demographic distinction
 full_food_data %>%
   filter(RIDAGEYR >= 2) %>%
   select(wave, grams, general_categories) %>%
@@ -590,16 +704,17 @@ full_food_data %>%
   )
 ```
 
+Next, I wangted to check if there was some type of noticeable relationship between continuous demographic variables and food consumption. This plot plots a scatterplot of food consumption against a demographic variable (in this example BMI). I colored the points in the plot to represent which survey cycle they are from. I also included a smoothed line in the plot to show the general shape of the relationship.  This plot is not very inforamtive due to the incredibly large dataset.  However, it does make it clear that there are a large amount of outliers in the data set.  There are over 5000 points with BMI greater than 40 which is incredibly high.  I wanted to removed outliers but since there were so many I felt like it would harm the ability to analyze the data.  It is possible that somehow incorporating data weights would help account for this issue, however ggplot is unable to incorporate data weights to my knowledge.  For future studies, I would consider removing outliers from each individual data set before merging them into one larger data set.
 
 ```{r}
 full_food_data %>%
   filter(RIDAGEYR >= 2) %>%
   select(wave, BMXBMI, grams, general_categories) %>%
-  filter(general_categories %in% c("Fruits")) %>%
+  filter(general_categories %in% c("Fruits")) %>% #select food of interest
   drop_na%>%
   ggplot(aes(BMXBMI, grams))+
-  geom_point(aes(x=BMXBMI, y = grams, color = wave), alpha = 1/2)+
-  geom_smooth(aes(BMXBMI, grams))+
+  geom_point(aes(x=BMXBMI, y = grams, color = wave), alpha = 1/2)+ #plots points and colors them by year
+  geom_smooth(aes(BMXBMI, grams))+ 
   theme_light()+
   scale_colour_simpsons()+
   theme_light()+
@@ -611,20 +726,22 @@ full_food_data %>%
   )
 ```
 
+After completing my food consumption analysis, I discovered data sets on nutrition consumption and decided to do similar analysis. The following plots are very similar to the food consumption line plots. They plot trends of nutrition intake such as calories, protein, and vitamin A.  The first plot divides the graph amongst different demographic groups while the second one does not.  In the shiny app these plots are joined as one and the user has the option whether to incorporate a demographic variable.  As with the food consumption plots, the plots do not use survey weights so they may not necessarilly be representative of the United States. One difficulty with the following plot is that it uses grams as a measurement rather than servings. Servings data was not available in the datasets, however if they were, they would be a more useful measurement for these plots.
+
 ```{r}
 full_nutrition_data %>%
-  filter(RIDAGEYR >= 2) %>%
+  filter(RIDAGEYR >= 2) %>% #I only want to look at people ages 2 and up since that is around the age children are eating actual food
   select(wave, Protein, food_security) %>%
   drop_na%>%
   group_by(wave, food_security) %>%
-  summarise(Protein.mean = mean(Protein), Protein.sd = mean(Protein), n=n())%>%
+  summarise(Protein.mean = mean(Protein), Protein.sd = mean(Protein), n=n())%>% #provides us with information to calculate confidence intervals
   ggplot()+
-  geom_point(aes(x=wave, y = Protein.mean, color = food_security)) +
-  geom_errorbar(aes(x=wave, ymin=Protein.mean-Protein.sd*1.96/sqrt(n), ymax=Protein.mean+Protein.sd*1.96/sqrt(n), colour = food_security), width = .2)+
-  geom_line(aes(x=wave, y = Protein.mean, group = food_security, colour=food_security), pch=21, size = 0.3)+
+  geom_point(aes(x=wave, y = Protein.mean, color = food_security)) + #plot points
+  geom_errorbar(aes(x=wave, ymin=Protein.mean-Protein.sd*1.96/sqrt(n), ymax=Protein.mean+Protein.sd*1.96/sqrt(n), colour = food_security), width = .2)+ #create confidence intervals around the points
+  geom_line(aes(x=wave, y = Protein.mean, group = food_security, colour=food_security), pch=21, size = 0.3)+ #draw lines between points
   theme_light()+
   scale_colour_colorblind()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ #need to make axis adjustments for proper visualization
   theme(legend.text = element_text(size = 10))+
   labs(
     title = "Nutrition Trends in the United States",
@@ -633,16 +750,17 @@ full_nutrition_data %>%
     y = "Average Protein per Day",
     color = "Food Security"
     )+
-    facet_grid(~food_security)
+    facet_grid(~food_security) #divide the graph into different segments
 ```
 
 ```{r}
-temp_nutrition <- full_nutrition_data %>%
+#this code is the same as above but removes the demographic distinction
+temp_nutrition <- full_nutrition_data %>% #need to create a temporary data set in order for proper grouping
   filter(RIDAGEYR >= 2) %>%
   select(wave, Protein,) %>%
   drop_na%>%
   group_by(wave) %>%
-  summarise(Protein.mean = mean(Protein), Protein.sd = mean(Protein), n=n())
+  summarise(Protein.mean = mean(Protein), Protein.sd = mean(Protein), n=n()) 
 temp_nutrition$group <- rep("group",nrow(temp_nutrition))
 temp_nutrition %>%
   ggplot()+
@@ -659,6 +777,8 @@ temp_nutrition %>%
     y = "Average Protein per Day"
   )
 ```
+
+This plot serves the same purpose as the food consumption scaterrplot and suffers from many of the same problems. 
 
 ```{r}
 full_nutrition_data %>%
@@ -678,20 +798,38 @@ full_nutrition_data %>%
     )
 ```
 
+The last plot is arguably the most interesting plot. It plots the relationship between two different types of nutrients in a similar manner to the previous plot.  Due to the nature of the data sets, I was unable to incorporate a similar plot for food consumption.  This plot can help address dietary issues such as acknowledging when the increase of one type of nutrient could possibly be decreasing the intake of a different type of nutrien.  I have also chosen to color the points by age to see who is consuming what certain amounts of nutrients.  However, due to the large amount of data, it is difficult to identify distinct points.  Here we see an example of the relationship between protein intake and cholesterol intake colored by age. In the shiny app, the user will be able to select which two nutrient variables to compare, as well as which demographic to color the points with. 
+
 ```{r}
 full_nutrition_data %>%
   filter(RIDAGEYR >= 2) %>%
-  select(race, Protein, Calories) %>%
+  select(race, Protein, Cholesterol) %>%
   drop_na%>%
-  ggplot(aes(x=Calories, y = Protein))+
-  geom_point(aes(x=Calories, y = Protein, color = race), alpha = 1/2)+
-  geom_smooth(aes(Calories, Protein))+
+  ggplot(aes(x=Protein, y = Cholesterol))+
+  geom_point(aes(x=Protein, y = Cholesterol, color = race), alpha = 1/2)+
+  geom_smooth(aes(Protein, Cholesterol))+
   theme_light()+
   scale_colour_simpsons()+
   labs(
     title = "United States Nutrition Scatterplot",
     caption = "NHANES 2001-2016 survey",
-    x = "Calories per Day",
-    y = "Protein per Day"
+    x = "Protein per Day",
+    y = "Cholesterol per Day"
     )
 ```
+
+## Results and Discussion
+
+The aim of this project was to explore what types of foods are being consumed by Americans and how that has changed over the past decade and a half. 
+
+I completed this by joining 98 datasets containing demographic, food, and nutrition information from the NHANES and WWEIA databases into three large datasets. In order to analyze the data, I created a Shiny app that allowed me to view the yearly trends of food and nutrient consumption, as well as the relationships between food/nutrient consumption and demographic status. 
+
+The most interesting results were the food consumption and nutrition trends.  Below are some interesting findings.
+
+1. The consumption of eggs have increased over time. Men appear to consume a decently larger amount of eggs than women. All other demographic types are fairly similar to eachother.
+
+2. People with incredibly low BMI consume less fruit than people with normal and large BMIs.  Poorer people also appear to consume less fruit.
+
+3. Men consume more cholesterol, protein, calories, and total fat compared to woman.
+
+In the future, I would try to attempt in depth regression analysis on these findings.  Hopefully these findings can help pin point specific nutritional health issues amongst different groups of people and help them develop diets and strategies to make up for thier deficits.  I think it would have been really interesting if the NHANES dataset identified people with vegan/vegetarian diets since they can struggle with getting certain nutrients such as protein.
