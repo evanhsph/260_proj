@@ -704,7 +704,7 @@ full_food_data %>%
   )
 ```
 
-Next, I wangted to check if there was some type of noticeable relationship between continuous demographic variables and food consumption. This plot plots a scatterplot of food consumption against a demographic variable (in this example BMI). I colored the points in the plot to represent which survey cycle they are from. I also included a smoothed line in the plot to show the general shape of the relationship.  This plot is not very inforamtive due to the incredibly large dataset.  However, it does make it clear that there are a large amount of outliers in the data set.  There are over 5000 points with BMI greater than 40 which is incredibly high.  I wanted to removed outliers but since there were so many I felt like it would harm the ability to analyze the data.  It is possible that somehow incorporating data weights would help account for this issue, however ggplot is unable to incorporate data weights to my knowledge.  For future studies, I would consider removing outliers from each individual data set before merging them into one larger data set.
+Next, I wanted to check if there was some type of noticeable relationship between continuous demographic variables and food consumption. This plot plots a scatterplot of food consumption against a demographic variable (in this example BMI). I colored the points in the plot to represent which survey cycle they are from. I also included a smoothed line in the plot to show the general shape of the relationship.  This plot is not very inforamtive due to the incredibly large dataset.  However, it does make it clear that there are a large amount of outliers in the data set.  There are over 5000 points with BMI greater than 40 which is incredibly high.  I wanted to removed outliers but since there were so many I felt like it would harm the ability to analyze the data.  It is possible that somehow incorporating data weights would help account for this issue, however ggplot is unable to incorporate data weights to my knowledge.  For future studies, I would consider removing outliers from each individual data set before merging them into one larger data set.
 
 ```{r}
 full_food_data %>%
@@ -826,9 +826,9 @@ I completed this by joining 98 datasets containing demographic, food, and nutrit
 
 The most interesting results were the food consumption and nutrition trends.  Below are some interesting findings.
 
-1. The consumption of eggs have increased over time. Men appear to consume a decently larger amount of eggs than women. All other demographic types are fairly similar to eachother.
+1. The consumption of eggs have increased over time. Men appear to consume a larger amount of eggs than women. All other demographic types are fairly similar to eachother.
 
-2. People with incredibly low BMI consume less fruit than people with normal and large BMIs.  Poorer people also appear to consume less fruit.
+2. People with very low BMI consume less fruit than people with normal and large BMIs.  Poorer people also appear to consume less fruit.
 
 3. Men consume more cholesterol, protein, calories, and total fat compared to woman.
 
