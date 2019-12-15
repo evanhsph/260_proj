@@ -201,7 +201,7 @@ dat <- rbind(d99, d01, d03, d05, d07, d09, d11, d13, d15) %>%
     diabetes = if_else(DIQ010 == 1, "Yes", "No"),
     tryweloss = if_else(WHQ070 == 1, "Yes", "No"),
     cursmoke = if_else(SMQ040 == 1, "Every Day", if_else(SMQ040 == 2, "Some days", "Not at all")),
-    bmi_cat = if_else(BMXBMI >= 30, '4', if_else(BMXBMI >= 25 & BMXBMI < 30, '3', if_else(BMXBMI >= 18.5 & BMXBMI < 25, '2', '1'))),
+    bmi_cat = if_else(BMXBMI >= 30, 'Obese', if_else(BMXBMI >= 25 & BMXBMI < 30, 'Overweight', if_else(BMXBMI >= 18.5 & BMXBMI < 25, 'Normal Weight', 'Underweight'))),
     age_cat = if_else(RIDAGEYR >= 18, 'Adult', 'Youth'),
     poverty_cat = if_else(INDFMPIR >= 5, 
                           '5', if_else(INDFMPIR < 5 & INDFMPIR >= 4, 
@@ -504,7 +504,8 @@ ui <- fluidPage(
                p(
                  "The data used was created using a number of datasets
                    available from the",
-                 a("NHANES Database", href = "https://www.cdc.gov/nchs/nhanes/index.htm")
+                 a("NHANES Database.", href = "https://www.cdc.gov/nchs/nhanes/index.htm"), 
+                 "Select a demographic variable to view how it has changed over the years in the United States."
                ),
                br(),
                selectInput(
@@ -531,7 +532,9 @@ ui <- fluidPage(
                  p(
                    "The data used was created using a number of datasets
                    available from the",
-                   a("NHANES Database", href = "https://www.cdc.gov/nchs/nhanes/index.htm")
+                   a("NHANES Database.", href = "https://www.cdc.gov/nchs/nhanes/index.htm"), 
+                   "Select a food to see how its consumption has changed over the years in the United States.  
+                   You can also choose a demographic variable to compare trends between different groups of people."
                  ),
                  br(),
                  selectInput(
@@ -564,8 +567,9 @@ ui <- fluidPage(
              sidebarLayout(sidebarPanel(
                p(
                  "The data used was created using a number of datasets
-                   available from the",
-                 a("NHANES Database", href = "https://www.cdc.gov/nchs/nhanes/index.htm")
+                 available from the",
+                 a("NHANES Database.", href = "https://www.cdc.gov/nchs/nhanes/index.htm"), 
+                 "Select a food to see how its consumption is related to one of three demographic variables."
                ),
                br(),
                selectInput(
@@ -591,7 +595,9 @@ ui <- fluidPage(
                  p(
                    "The data used was created using a number of datasets
                    available from the",
-                   a("NHANES Database", href = "https://www.cdc.gov/nchs/nhanes/index.htm")
+                   a("NHANES Database.", href = "https://www.cdc.gov/nchs/nhanes/index.htm"), 
+                   "Select a nutrient to see how its intake has changed over the years in the United States.  
+                   You can also choose a demographic variable to compare trends between different groups of people."
                  ),
                  br(),
                  selectInput(
@@ -624,8 +630,9 @@ ui <- fluidPage(
              sidebarLayout(sidebarPanel(
                p(
                  "The data used was created using a number of datasets
-                   available from the",
-                 a("NHANES Database", href = "https://www.cdc.gov/nchs/nhanes/index.htm")
+                 available from the",
+                 a("NHANES Database.", href = "https://www.cdc.gov/nchs/nhanes/index.htm"), 
+                 "Select a nutrient to see how its intake is related to one of three demographic variables."
                ),
                br(),
                selectInput(
@@ -650,8 +657,9 @@ ui <- fluidPage(
              sidebarLayout(sidebarPanel(
                p(
                  "The data used was created using a number of datasets
-                   available from the",
-                 a("NHANES Database", href = "https://www.cdc.gov/nchs/nhanes/index.htm")
+                 available from the",
+                 a("NHANES Database.", href = "https://www.cdc.gov/nchs/nhanes/index.htm"), 
+                 "Select to nutrients to compare how their intake is related."
                ),
                br(),
                selectInput(

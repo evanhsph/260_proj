@@ -281,7 +281,7 @@ dat <- rbind(d99, d01, d03, d05, d07, d09, d11, d13, d15) %>%
     #Give smoking status readable labels
     cursmoke = if_else(SMQ040 == 1, "Every Day", if_else(SMQ040 == 2, "Some days", "Not at all")),
     #Create a bmi category variable
-    bmi_cat = if_else(BMXBMI >= 30, '4', if_else(BMXBMI >= 25 & BMXBMI < 30, '3', if_else(BMXBMI >= 18.5 & BMXBMI < 25, '2', '1'))),
+    bmi_cat = if_else(BMXBMI >= 30, 'Obese', if_else(BMXBMI >= 25 & BMXBMI < 30, 'Overweight', if_else(BMXBMI >= 18.5 & BMXBMI < 25, 'Normal Weight', 'Underweight'))),
     #Create an age category to differentiate between adults and youth
     age_cat = if_else(RIDAGEYR >= 18, 'Adult', 'Youth'),
     #Create a poverty ratio category
@@ -652,7 +652,8 @@ trend %>%
     )
 ```
 
-After looking at trends of demographics, I wanted to next look at trends of food consumption within the different demographics. The following two plots plot trends of food consumption.  The first plot divides the graph amongst different demographic groups while the second one does not.  In the shiny app these plots are joined as one and the user has the option whether to incorporate a demographic variable.  The plots do not use survey weights so they may not necessarilly be representative of the United States.  The plots include error bars equated using a 95% confidence interval.  Initally I only included the mean consumption value, however I thought it would be useful to include some form of variation. This can especially revealing since our data has large variance when it comes to certain foods. Below are examples of two of these plots looking at trends of fruit consumption.  The first plot is divide amongst food security status. 
+After looking at trends of demographics, I wanted to next look at trends of food consumption within the different demographics. The following two plots plot trends of food consumption.  The first plot divides the graph amongst different demographic groups while the second one does not.  In the shiny app these plots are joined as one and the user has the option whether to incorporate a demographic variable.  The plots do not use survey weights so they may not necessarilly be representative of the United States.  The plots include error bars equated using a 95% confidence interval.  Initally I only included the mean consumption value, however I thought it would be useful to include some form of variation. This can especially revealing since our data has large variance when it comes to certain foods. One difficulty with the following plot is that it uses grams as a measurement rather than servings. Servings data was not available in the datasets, however if they were, they would be a more useful measurement for these plots.
+Below are examples of two of these plots looking at trends of fruit consumption.  The first plot is divide amongst food security status. 
 
 ```{r}
 full_food_data %>%
@@ -726,7 +727,7 @@ full_food_data %>%
   )
 ```
 
-After completing my food consumption analysis, I discovered data sets on nutrition consumption and decided to do similar analysis. The following plots are very similar to the food consumption line plots. They plot trends of nutrition intake such as calories, protein, and vitamin A.  The first plot divides the graph amongst different demographic groups while the second one does not.  In the shiny app these plots are joined as one and the user has the option whether to incorporate a demographic variable.  As with the food consumption plots, the plots do not use survey weights so they may not necessarilly be representative of the United States. One difficulty with the following plot is that it uses grams as a measurement rather than servings. Servings data was not available in the datasets, however if they were, they would be a more useful measurement for these plots.
+After completing my food consumption analysis, I discovered data sets on nutrition consumption and decided to do similar analysis. The following plots are very similar to the food consumption line plots. They plot trends of nutrition intake such as calories, protein, and vitamin A.  The first plot divides the graph amongst different demographic groups while the second one does not.  In the shiny app these plots are joined as one and the user has the option whether to incorporate a demographic variable.  As with the food consumption plots, the plots do not use survey weights so they may not necessarilly be representative of the United States. 
 
 ```{r}
 full_nutrition_data %>%
